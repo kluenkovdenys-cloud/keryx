@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keryx Messenger</title>
+    <style>
+        :root {
+            --primary: #FFD700;
+            --primary-h: #E6C200;
+            --bg: #F9F9F9;
+            --card: #FFF;
+            --text: #1A1A1A;
+            --input: #F0F0F0;
+        }
+
+        .dark-theme {
+            --bg: #121212;
+            --card: #1E1E1E;
+            --text: #FFF;
+            --input: #2A2A2A;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            transition: background 0.5s;
+        }
+
+        /* Контейнер формы */
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            background: var(--card);
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: 15px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo_img { width: 60px; height: 60px; fill: #1A1A1A;
+         border-radius: 15px;}
+
+        h1 { font-size: 24px; margin-bottom: 8px; }
+        p { font-size: 14px; opacity: 0.7; margin-bottom: 30px; }
+
+        /* Поля ввода */
+        .field { text-align: left; margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; }
+        input {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: var(--input);
+            color: var(--text);
+            font-size: 16px;
+            outline: none;
+        }
+        input:focus { box-shadow: 0 0 0 2px var(--primary); }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn:hover { background: var(--primary-h); transform: translateY(-2px); }
+
+        /* Переключатель */
+        .toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: var(--card);
+            color: var(--text);
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Оверлей для волны */
+        .wave {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .footer-link { margin-top: 25px; font-size: 14px; }
+        .footer-link a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body class="light-theme">
+
+    <button class="toggle" id="tgl" title="Сменить тему">
+        <svg id="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+    </button>
+
+    <div class="auth-card">
+        <div class="logo">
+            <img class="logo_img" src="/static/img/keryx1.png">
+        </div>
+        <h1>Keryx</h1>
+        <p>Добро пожаловать в мессенджер</p>
+
+        <form method="POST" >
+            {{ form.hidden_tag() }}
+            <div class="field">
+                <div type="text">{{form.username.label}} {{form.username(placeholder="ivan_keryx")}}</div>
+            </div>
+
+            <div class="field">
+                <div type="password" >{{form.password.label}} {{form.password(placeholder="••••••••")}}</div>
+            </div>
+
+             <div class="btn">
+                {{form.submit(value="Sign Up")}}
+             </div>
+        </form>
+
+        <div class="footer-link">Уже есть аккаунт? <a href="/login">Войти</a></div>
+    </div>
+
+    <script>
+        const b = document.body;
+        const btn = document.getElementById('tgl');
+        const icon = document.getElementById('icon');
+
+        const sun = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+        const moon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+
+        icon.innerHTML = moon;
+
+        btn.onclick = (e) => {
+            const x = e.clientX, y = e.clientY;
+            const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+
+            // Создаем только один цветной слой для эффекта
+            const w = document.createElement('div');
+            w.className = 'wave';
+            // Устанавливаем цвет оверлея в соответствии с ТЕКУЩЕЙ темой перед переключением
+            w.style.backgroundColor = getComputedStyle(b).backgroundColor;
+            document.body.appendChild(w);
+
+            // Меняем тему основного интерфейса
+            const isDark = b.classList.toggle('dark-theme');
+            icon.innerHTML = isDark ? sun : moon;
+
+            // Анимируем "схлопывание" старой темы в точку клика
+            w.animate([
+                { clipPath: `circle(${r}px at ${x}px ${y}px)` },
+                { clipPath: `circle(0px at ${x}px ${y}px)` }
+            ], { duration: 600, easing: 'ease-in' }).onfinish = () => w.remove();
+        };
+    </script>
+</body>
+</html>
