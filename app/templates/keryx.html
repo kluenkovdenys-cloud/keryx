@@ -100,7 +100,6 @@
             display: flex; flex: 1; overflow: hidden; padding: 20px; gap: 20px;
         }
 
-        /* Settings View Styles */
         .settings-container {
             display: none;
             width: 100%;
@@ -249,7 +248,6 @@
         input:checked + .slider { background: var(--grad); }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        /* Новые элементы управления настройками */
         .settings-select {
             padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border);
             background: var(--input); color: var(--text); outline: none;
@@ -281,7 +279,6 @@
             width: 120px; cursor: pointer; accent-color: var(--primary-h);
         }
 
-        /* General styles continued */
         .sidebar {
             width: 320px; background: var(--sidebar); backdrop-filter: var(--accent-blur);
             border-radius: 28px; display: flex; flex-direction: column;
@@ -302,9 +299,10 @@
             background: var(--grad); display: flex; align-items: center;
             justify-content: center; font-weight: 800; position: relative;
             color: #000; border: 2px solid var(--card); flex-shrink: 0;
-            overflow: hidden; /* Ensure image fits inside rounded corners */
+            overflow: hidden;
             background-size: cover;
             background-position: center;
+            transition: all 0.3s ease;
         }
 
         .status-pulse {
@@ -379,6 +377,60 @@
 
         .wave { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 200; pointer-events: none; }
 
+        /* Уведомление об успешном сохранении */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--card);
+            border-left: 5px solid var(--primary);
+            padding: 16px 24px;
+            border-radius: 14px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1100;
+            transform: translateY(150px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast-icon {
+            width: 24px;
+            height: 24px;
+            color: #6BCB77;
+        }
+
+        /* Поля ввода в настройках информации */
+        .info-edit-input {
+            width: 100%;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+            padding: 8px 12px;
+            margin-top: 5px;
+            transition: all 0.2s ease;
+        }
+        .info-edit-input:focus {
+            border-color: var(--primary);
+            background: var(--card);
+        }
+
+        /* Стилизация неактивных/активных полей */
+        .settings-row-interactive {
+            transition: background 0.2s ease;
+        }
+        .settings-row-interactive:hover {
+            background: rgba(255, 215, 0, 0.03);
+        }
+
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
         @media (max-width: 768px) {
@@ -393,7 +445,6 @@
 </head>
 <body class="light-theme">
 
-    <!-- Скрытый инпут для выбора аватара -->
     <input type="file" id="avatarInput" accept="image/*" style="display: none;">
 
     <div class="orb orb-1"></div>
@@ -419,7 +470,7 @@
             <button class="btn-icon" id="tgl" title="Тема">
                 <svg id="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"></svg>
             </button>
-            <div class="avatar" id="myAvatar" style="width: 44px; height: 44px; cursor: pointer; transform: rotate(5deg);" onclick="showModal('Ваш личный профиль')" title="Профиль">ME</div>
+            <div class="avatar" id="myAvatar" style="width: 44px; height: 44px; cursor: pointer; transform: rotate(5deg);" onclick="showModal('Ваш личный профиль')" title="Профиль">МА</div>
         </div>
     </header>
 
@@ -463,19 +514,19 @@
                 <aside class="settings-sidebar">
                     <h3 style="margin-bottom: 20px; opacity: 0.5; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Настройки</h3>
 
-                    <div class="settings-nav-item" onclick="switchSettingsTab('general')">
-                        <div class="settings-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></div>
-                        <div class="settings-nav-text">
-                            <span class="settings-nav-title">Общие</span>
-                            <span class="settings-nav-desc">Запуск, жесты, многозадачность</span>
-                        </div>
-                    </div>
-
                     <div class="settings-nav-item active" onclick="switchSettingsTab('profile')">
                         <div class="settings-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
                         <div class="settings-nav-text">
                             <span class="settings-nav-title">Профиль</span>
                             <span class="settings-nav-desc">Имя, фото профиля, статус</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-nav-item" onclick="switchSettingsTab('general')">
+                        <div class="settings-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></div>
+                        <div class="settings-nav-text">
+                            <span class="settings-nav-title">Общие</span>
+                            <span class="settings-nav-desc">Запуск, жесты, многозадачность</span>
                         </div>
                     </div>
 
@@ -540,29 +591,47 @@
                     <div id="tab-profile" class="settings-section-view active">
                         <div class="settings-section">
                             <h2 class="settings-title">Профиль</h2>
-                            <div class="settings-group" style="padding: 20px; display: flex; align-items: center; gap: 20px;">
-                                <div class="avatar" style="width: 80px; height: 80px; font-size: 24px; cursor: pointer;" onclick="document.getElementById('avatarInput').click()" id="settingsAvatarPreview">ME</div>
-                                <div style="flex: 1;">
-                                    <div style="font-size: 14px; opacity: 0.6; margin-bottom: 5px;">Отображаемое имя</div>
-                                    <input type="text" value="Мой Аккаунт" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--input); color: var(--text); outline: none; font-weight: 600;">
+                            <div class="settings-group" style="padding: 24px; display: flex; flex-direction: column; gap: 20px;">
+                                <div style="display: flex; align-items: center; gap: 20px;">
+                                    <div class="avatar" style="width: 80px; height: 80px; font-size: 24px; cursor: pointer;" onclick="document.getElementById('avatarInput').click()" id="settingsAvatarPreview">МА</div>
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 14px; opacity: 0.6; margin-bottom: 5px;">Отображаемое имя</div>
+                                        <input type="text" id="profileNameInput" value="Мой Аккаунт" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--input); color: var(--text); outline: none; font-weight: 600; transition: border-color 0.2s;">
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: flex-end;">
+                                    <button class="settings-btn" id="saveProfileBtn" style="width: auto; padding: 12px 24px; background: var(--grad); color: #000; border: none; font-weight: 700; box-shadow: 2px 2px 0 var(--text);">
+                                        Сохранить изменения
+                                    </button>
                                 </div>
                             </div>
 
                             <h3 style="font-size: 13px; text-transform: uppercase; opacity: 0.5; margin: 25px 0 10px 10px;">Информация</h3>
                             <div class="settings-group">
-                                <div class="settings-row">
+                                <div class="settings-row settings-row-interactive">
                                     <div class="settings-row-info">
                                         <div class="settings-row-label">О себе</div>
-                                        <div class="settings-row-sub">В поиске вдохновения...</div>
+                                        <div id="bioDisplayArea" style="opacity: 0.7; font-size: 13px; line-height: 1.4; min-height: 18px;">В поиске вдохновения...</div>
+                                        <input type="text" id="profileBioInput" value="В поиске вдохновения..." class="info-edit-input" style="display: none;">
                                     </div>
-                                    <button class="btn-icon" style="background: transparent; width: 32px; height: 32px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                    <button class="btn-icon" id="editBioBtn" style="background: transparent; width: 32px; height: 32px;" onclick="toggleEditBio()">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                    </button>
                                 </div>
-                                <div class="settings-row">
+                                <div class="settings-row settings-row-interactive">
                                     <div class="settings-row-info">
                                         <div class="settings-row-label">Имя пользователя</div>
-                                        <div class="settings-row-sub">@my_keryx_id</div>
+                                        <div id="usernameDisplayArea" style="opacity: 0.7; font-size: 13px; line-height: 1.4; display: flex; align-items: center; gap: 4px; min-height: 18px;">
+                                            <span>@my_keryx_id</span>
+                                        </div>
+                                        <div id="usernameEditContainer" style="display: none; align-items: center; gap: 4px; width: 100%;">
+                                            <span style="opacity: 0.5; font-size: 13px; margin-top: 5px;">@</span>
+                                            <input type="text" id="profileUsernameInput" value="my_keryx_id" class="info-edit-input" placeholder="username">
+                                        </div>
                                     </div>
-                                    <button class="btn-icon" style="background: transparent; width: 32px; height: 32px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                    <button class="btn-icon" id="editUsernameBtn" style="background: transparent; width: 32px; height: 32px;" onclick="toggleEditUsername()">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -574,7 +643,7 @@
                             <div class="settings-group">
                                 <div class="settings-row">
                                     <div class="settings-row-info">
-                                        <div class="settings-row-label">Запускать при старте системы</div>
+                                        <div class="settings-row-label">Запускавать при старте системы</div>
                                         <div class="settings-row-sub">Открывать приложение в фоновом режиме</div>
                                     </div>
                                     <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
@@ -872,6 +941,24 @@
         </div>
     </div>
 
+    <!-- Модальное окно -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle" style="font-size: 20px; font-weight: 800; margin-bottom: 15px;">Заголовок</h3>
+            <p style="opacity: 0.6; font-size: 14px; line-height: 1.5;">Этот интерфейс находится в режиме демонстрации. Изменения временно не сохраняются.</p>
+            <button class="close-modal" onclick="hideModal()">Понятно</button>
+        </div>
+    </div>
+
+    <!-- Всплывающий Тост -->
+    <div id="toastNotification" class="toast">
+        <svg class="toast-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span id="toastText" style="font-size: 14px; font-weight: 600;">Профиль успешно сохранен!</span>
+    </div>
+
     <script>
         const users = [
             { id: 1, name: 'Алексей Дизайн', initial: 'AD', status: 'Online', messages: [{t: 'Я добавил динамические градиенты и эффект "парения". Как тебе?', type: 'in', time: '22:05'}], color: 'var(--grad)' },
@@ -881,33 +968,14 @@
 
         let activeUserId = 1;
         let isSettingsOpen = false;
+        let isEditingBio = false;
+        let isEditingUsername = false;
 
-        function switchSettingsTab(tabId) {
-            // Обновляем активный класс в боковом меню
-            document.querySelectorAll('.settings-nav-item').forEach(el => {
-                el.classList.remove('active');
-            });
-            event.currentTarget.classList.add('active');
-
-            // Скрываем все секции
-            document.querySelectorAll('.settings-section-view').forEach(el => {
-                el.classList.remove('active');
-            });
-
-            // Показываем нужную секцию
-            const targetTab = document.getElementById(`tab-${tabId}`);
-            if (targetTab) {
-                targetTab.classList.add('active');
-            } else {
-                // Если вкладка еще не реализована, показываем заглушку
-                const placeholder = document.getElementById('tab-placeholder');
-                placeholder.classList.add('active');
-
-                // Берем название из кликнутого элемента для заголовка заглушки
-                const titleText = event.currentTarget.querySelector('.settings-nav-title').innerText;
-                document.getElementById('placeholder-title').innerText = titleText;
-            }
-        }
+        let currentProfile = {
+            name: 'Мой Аккаунт',
+            bio: 'В поиске вдохновения...',
+            username: 'my_keryx_id'
+        };
 
         const chatList = document.getElementById('chatList');
         const messageArea = document.getElementById('messageArea');
@@ -919,6 +987,161 @@
         const avatarInput = document.getElementById('avatarInput');
         const myAvatar = document.getElementById('myAvatar');
         const settingsAvatarPreview = document.getElementById('settingsAvatarPreview');
+        const profileNameInput = document.getElementById('profileNameInput');
+
+        // Элементы интерактивного редактирования информации
+        const bioDisplayArea = document.getElementById('bioDisplayArea');
+        const profileBioInput = document.getElementById('profileBioInput');
+        const editBioBtn = document.getElementById('editBioBtn');
+
+        const usernameDisplayArea = document.getElementById('usernameDisplayArea');
+        const usernameEditContainer = document.getElementById('usernameEditContainer');
+        const profileUsernameInput = document.getElementById('profileUsernameInput');
+        const editUsernameBtn = document.getElementById('editUsernameBtn');
+
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+
+        // Извлечение инициалов из имени
+        function getInitials(name) {
+            if (!name) return 'ME';
+            const words = name.trim().split(/\s+/);
+            if (words.length >= 2) {
+                return (words[0][0] + words[1][0]).toUpperCase();
+            }
+            return name.substring(0, 2).toUpperCase();
+        }
+
+        // Обновление отображения аватарок на основе введенных букв
+        function updateAvatarInitials(name) {
+            const initials = getInitials(name);
+            if (!myAvatar.style.backgroundImage) {
+                myAvatar.innerText = initials;
+            }
+            if (!settingsAvatarPreview.style.backgroundImage) {
+                settingsAvatarPreview.innerText = initials;
+            }
+        }
+
+        // Включение/выключение редактирования статуса "О себе"
+        function toggleEditBio() {
+            isEditingBio = !isEditingBio;
+            if (isEditingBio) {
+                bioDisplayArea.style.display = 'none';
+                profileBioInput.style.display = 'block';
+                profileBioInput.focus();
+                editBioBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            } else {
+                saveField('bio');
+            }
+        }
+
+        // Включение/выключение редактирования имени пользователя
+        function toggleEditUsername() {
+            isEditingUsername = !isEditingUsername;
+            if (isEditingUsername) {
+                usernameDisplayArea.style.display = 'none';
+                usernameEditContainer.style.display = 'flex';
+                profileUsernameInput.focus();
+                editUsernameBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            } else {
+                saveField('username');
+            }
+        }
+
+        // Локальное автосохранение полей при потере фокуса или клике на галочку
+        function saveField(type) {
+            if (type === 'bio') {
+                const newBio = profileBioInput.value.trim() || 'В поиске вдохновения...';
+                currentProfile.bio = newBio;
+                bioDisplayArea.innerText = newBio;
+                bioDisplayArea.style.display = 'block';
+                profileBioInput.style.display = 'none';
+                editBioBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+                isEditingBio = false;
+            } else if (type === 'username') {
+                let newUsername = profileUsernameInput.value.trim().replace(/^@/, '');
+
+                if (newUsername === '') {
+                    showToast('Имя пользователя не может быть пустым', '#FF6B6B');
+                    profileUsernameInput.focus();
+                    isEditingUsername = true;
+                    return;
+                }
+
+                // Валидация юзернейма на латинские буквы, цифры и подчеркивания
+                const usernameRegex = /^[a-zA-Z0-9_]+$/;
+                if (!usernameRegex.test(newUsername)) {
+                    showToast('Только латинские буквы, цифры и "_"', '#FF6B6B');
+                    profileUsernameInput.focus();
+                    isEditingUsername = true;
+                    return;
+                }
+
+                currentProfile.username = newUsername;
+                usernameDisplayArea.innerHTML = `<span>@${newUsername}</span>`;
+                usernameDisplayArea.style.display = 'flex';
+                usernameEditContainer.style.display = 'none';
+                editUsernameBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+                isEditingUsername = false;
+            }
+        }
+
+        // Обработка клавиши Enter внутри дополнительных полей информации
+        profileBioInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                toggleEditBio();
+            }
+        });
+
+        profileUsernameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                toggleEditUsername();
+            }
+        });
+
+        // Слушатель ввода имени для обновления инициалов в реальном времени
+        profileNameInput.addEventListener('input', (e) => {
+            updateAvatarInitials(e.target.value);
+        });
+
+        // Кнопка сохранения профиля с анимированным тостом
+        saveProfileBtn.addEventListener('click', () => {
+            // Если какие-то поля открыты для редактирования, сначала сохраняем их
+            if (isEditingBio) toggleEditBio();
+            if (isEditingUsername) toggleEditUsername();
+
+            const newName = profileNameInput.value.trim();
+
+            if (newName === '') {
+                showToast('Имя профиля не может быть пустым', '#FF6B6B');
+                return;
+            }
+
+            // Обновление состояния основного имени
+            currentProfile.name = newName;
+
+            // Обновляем инициалы
+            updateAvatarInitials(newName);
+
+            // Показываем красивое уведомление
+            showToast('Изменения профиля успешно сохранены!');
+        });
+
+        // Показ тоста
+        function showToast(message, borderStyleColor = 'var(--primary)') {
+            const toast = document.getElementById('toastNotification');
+            const toastText = document.getElementById('toastText');
+
+            toastText.innerText = message;
+            toast.style.borderLeftColor = borderStyleColor;
+
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
 
         // Логика загрузки аватара
         avatarInput.addEventListener('change', function(e) {
@@ -928,12 +1151,13 @@
                 reader.onload = function(e) {
                     const imgUrl = `url(${e.target.result})`;
                     myAvatar.style.backgroundImage = imgUrl;
-                    myAvatar.innerHTML = ''; // Убираем текст "ME"
+                    myAvatar.innerHTML = '';
 
                     if (settingsAvatarPreview) {
                         settingsAvatarPreview.style.backgroundImage = imgUrl;
                         settingsAvatarPreview.innerHTML = '';
                     }
+                    showToast('Фотография профиля обновлена!');
                 };
                 reader.readAsDataURL(file);
             }
@@ -958,6 +1182,28 @@
                 settingsView.style.display = 'none';
                 settingsBtn.classList.remove('active');
                 isSettingsOpen = false;
+            }
+        }
+
+        function switchSettingsTab(tabId) {
+            document.querySelectorAll('.settings-nav-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            document.querySelectorAll('.settings-section-view').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            } else {
+                const placeholder = document.getElementById('tab-placeholder');
+                placeholder.classList.add('active');
+
+                const titleText = event.currentTarget.querySelector('.settings-nav-title').innerText;
+                document.getElementById('placeholder-title').innerText = titleText;
             }
         }
 
@@ -1003,7 +1249,6 @@
             });
             messageArea.scrollTop = messageArea.scrollHeight;
             renderChatList(searchInput.value);
-            // Если переключаем чат, закрываем настройки
             if(isSettingsOpen) toggleSettings();
         }
 
@@ -1050,6 +1295,7 @@
         window.onload = () => {
             renderChatList();
             selectUser(1);
+            updateAvatarInitials(currentProfile.name);
         };
     </script>
 </body>
