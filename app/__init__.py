@@ -15,6 +15,10 @@ login_manager.login_view='login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+class Search(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    finding = db.Column(db.String(26), nullable=False)
+
 class User(db.Model, UserMixin):
     id=db.Column(db.Integer,primary_key=True)
     username = db.Column(db.String(80),unique=True,nullable=False)
@@ -58,3 +62,16 @@ def login():
 @app.route("/keryx")
 def keryx():
     return render_template("keryx.html")
+
+@app.route("/search")
+def search_user():
+    username = request.args.get('username', "").strip()
+    username = username.replace("@", "")
+    user = User.query.filter(User.username.ilike(username)).first()
+    if user:
+        return redirect (url_for('profile', user_id=user.id))
+    return "Пользователь не найден."
+@app.route("/profile/<int:user_id>")
+def profile(user_id):
+    user=User.query.get_or_404(user_id)
+    return render_template("keryx.html",user=user)

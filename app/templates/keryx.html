@@ -344,6 +344,54 @@
             box-shadow: 0 6px 20px rgba(255, 215, 0, 0.15);
         }
 
+        /* Стили для вложений в сообщениях */
+        .msg-image {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 14px;
+            margin-top: 8px;
+            display: block;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .msg-image:hover {
+            transform: scale(1.02);
+        }
+
+        .msg-file {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-top: 8px;
+            text-decoration: none;
+            color: inherit;
+        }
+        .dark-theme .msg-file {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .msg-file-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            color: #000;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .msg-file-info {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+
         .chat-footer { padding: 25px; }
         .input-wrapper {
             background: var(--input); padding: 10px 10px 10px 25px;
@@ -431,6 +479,40 @@
             background: rgba(255, 215, 0, 0.03);
         }
 
+        /* Выпадающий список результатов поиска */
+        .search-results-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-top: 8px;
+            box-shadow: var(--shadow);
+            z-index: 200;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .search-result-item {
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover { background: rgba(255, 215, 0, 0.08); }
+
+        .search-result-left { display: flex; align-items: center; gap: 12px; }
+        .search-result-name { font-weight: 700; font-size: 14px; }
+        .search-result-sub { font-size: 11px; opacity: 0.5; }
+
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
         @media (max-width: 768px) {
@@ -447,6 +529,9 @@
 
     <input type="file" id="avatarInput" accept="image/*" style="display: none;">
 
+    <!-- Невидимый инпут для отправки любых файлов/изображений в чат -->
+    <input type="file" id="chatFileInput" style="display: none;">
+
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
 
@@ -457,10 +542,13 @@
         </div>
 
         <div class="header-center">
-            <div class="global-search">
+            <!-- Flask-форма поиска -->
+            <form action="/search" method="GET" class="global-search" style="width: 100%;">
                 <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="searchInput" placeholder="Поиск контактов...">
-            </div>
+                <input type="text" name="username" id="searchInput" placeholder="Поиск контактов или людей..." autocomplete="off">
+                <!-- Контейнер для результатов динамического AJAX поиска -->
+                <div class="search-results-dropdown" id="searchResultsDropdown"></div>
+            </form>
         </div>
 
         <div class="header-right" style="display: flex; gap: 12px; align-items: center;">
@@ -493,7 +581,8 @@
 
                 <footer class="chat-footer">
                     <form class="input-wrapper" id="chatForm">
-                        <button type="button" class="btn-icon" style="background: transparent; width: auto;" onclick="showModal('Прикрепить файл')">
+                        <!-- Нажатие на иконку скрепки открывает выбор файлов/изображений -->
+                        <button type="button" class="btn-icon" style="background: transparent; width: auto;" onclick="document.getElementById('chatFileInput').click()">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity: 0.4;"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
                         </button>
                         <input type="text" id="messageInput" placeholder="Напишите послание..." autocomplete="off">
@@ -945,7 +1034,9 @@
     <div class="modal" id="modal">
         <div class="modal-content">
             <h3 id="modalTitle" style="font-size: 20px; font-weight: 800; margin-bottom: 15px;">Заголовок</h3>
-            <p style="opacity: 0.6; font-size: 14px; line-height: 1.5;">Этот интерфейс находится в режиме демонстрации. Изменения временно не сохраняются.</p>
+            <div id="modalBody" style="opacity: 0.8; font-size: 14px; line-height: 1.5; margin-bottom: 15px;">
+                Этот интерфейс находится в режиме демонстрации. Изменения временно не сохраняются.
+            </div>
             <button class="close-modal" onclick="hideModal()">Понятно</button>
         </div>
     </div>
@@ -961,15 +1052,26 @@
 
     <script>
         const users = [
-            { id: 1, name: 'Алексей Дизайн', initial: 'AD', status: 'Online', messages: [{t: 'Я добавил динамические градиенты и эффект "парения". Как тебе?', type: 'in', time: '22:05'}], color: 'var(--grad)' },
-            { id: 2, name: 'Мария К.', initial: 'MK', status: 'Offline', messages: [{t: 'Привет! Посмотришь дизайн завтра?', type: 'in', time: '18:15'}], color: 'linear-gradient(135deg, #FF6B6B 0%, #EE5253 100%)' },
-            { id: 3, name: 'Борис Разраб', initial: 'БР', status: 'Online', messages: [{t: 'Все кнопки теперь функциональные. Проверяй!', type: 'in', time: '21:00'}], color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }
+            { id: 1, name: 'Алексей Дизайн', username: 'alex_design', initial: 'AD', status: 'Online', bio: 'Пишу красивый UI/UX для души', messages: [{t: 'Я добавил динамические градиенты и эффект "парения". Как тебе?', type: 'in', time: '22:05'}], color: 'var(--grad)' },
+            { id: 2, name: 'Мария К.', username: 'mary_k', initial: 'MK', status: 'Offline', bio: 'Управление продуктом и аналитика', messages: [{t: 'Привет! Посмотришь дизайн завтра?', type: 'in', time: '18:15'}], color: 'linear-gradient(135deg, #FF6B6B 0%, #EE5253 100%)' },
+            { id: 3, name: 'Борис Разраб', username: 'boris_dev', initial: 'БР', status: 'Online', bio: 'Fullstack-разработчик. React/Node.js', messages: [{t: 'Все кнопки теперь функциональные. Проверяй!', type: 'in', time: '21:00'}], color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }
+        ];
+
+        // Глобальная база пользователей для внешнего поиска
+        const globalDirectory = [
+            { id: 1, name: 'Алексей Дизайн', username: 'alex_design', initial: 'AD', status: 'Online', bio: 'Пишу красивый UI/UX для души', color: 'var(--grad)' },
+            { id: 2, name: 'Мария К.', username: 'mary_k', initial: 'MK', status: 'Offline', bio: 'Управление продуктом и аналитика', color: 'linear-gradient(135deg, #FF6B6B 0%, #EE5253 100%)' },
+            { id: 3, name: 'Борис Разраб', username: 'boris_dev', initial: 'БР', status: 'Online', bio: 'Fullstack-разработчик. React/Node.js', color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+            { id: 4, name: 'Елена Маркетинг', username: 'elena_promo', initial: 'ЕМ', status: 'Online', bio: 'PR, Трафик, Стратегия продвижения', color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+            { id: 5, name: 'Дмитрий Аналитик', username: 'dima_data', initial: 'ДА', status: 'Offline', bio: 'Big Data & ML Engineer', color: 'linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)' },
+            { id: 6, name: 'Светлана Тестировщик', username: 'sveta_qa', initial: 'СТ', status: 'Online', bio: 'QA automation. Найду любой баг', color: 'linear-gradient(135deg, #c3cfe2 0%, #c3cfe2 100%)' }
         ];
 
         let activeUserId = 1;
         let isSettingsOpen = false;
         let isEditingBio = false;
         let isEditingUsername = false;
+        let lastSearchedUser = null; // Хранит последний найденный профиль
 
         let currentProfile = {
             name: 'Мой Аккаунт',
@@ -982,7 +1084,9 @@
         const currentChatInfo = document.getElementById('currentChatInfo');
         const chatForm = document.getElementById('chatForm');
         const messageInput = document.getElementById('messageInput');
+        const chatFileInput = document.getElementById('chatFileInput');
         const searchInput = document.getElementById('searchInput');
+        const searchResultsDropdown = document.getElementById('searchResultsDropdown');
         const settingsBtn = document.getElementById('settingsBtn');
         const avatarInput = document.getElementById('avatarInput');
         const myAvatar = document.getElementById('myAvatar');
@@ -1163,6 +1267,37 @@
             }
         });
 
+        // Логика отправки файлов в текущий чат
+        chatFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            const now = new Date();
+            const time = now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+            const user = users.find(u => u.id === activeUserId);
+
+            reader.onload = function(evt) {
+                const isImage = file.type.startsWith('image/');
+                const messageObj = {
+                    t: file.name,
+                    type: 'out',
+                    time: time,
+                    fileData: evt.target.result,
+                    isImage: isImage,
+                    fileSize: (file.size / 1024).toFixed(1) + ' KB'
+                };
+
+                user.messages.push(messageObj);
+                chatFileInput.value = ''; // сброс инпута
+                selectUser(activeUserId);
+                showToast('Файл успешно прикреплен!');
+            };
+
+            // Читаем как DataURL для отображения превью
+            reader.readAsDataURL(file);
+        });
+
         function toggleSettings() {
             isSettingsOpen = !isSettingsOpen;
             toggleView(isSettingsOpen ? 'settings' : 'chat');
@@ -1213,14 +1348,21 @@
                 const item = document.createElement('div');
                 item.className = `chat-item ${user.id === activeUserId ? 'active' : ''}`;
                 item.onclick = () => selectUser(user.id);
+
+                let lastMsgText = 'Нет сообщений';
+                if (user.messages.length > 0) {
+                    const lastMsg = user.messages[user.messages.length - 1];
+                    lastMsgText = lastMsg.fileData ? `📁 [Файл] ${lastMsg.t}` : lastMsg.t;
+                }
+
                 item.innerHTML = `
                     <div class="avatar" style="background: ${user.color}">
                         ${user.initial} ${user.status === 'Online' ? '<span class="status-pulse"></span>' : ''}
                     </div>
-                    <div class="chat-info">
-                        <h4 style="font-weight: 700;">${user.name}</h4>
-                        <p style="opacity: 0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            ${user.messages[user.messages.length - 1]?.t || 'Нет сообщений'}
+                    <div class="chat-info" style="overflow: hidden; flex: 1;">
+                        <h4 style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${user.name}</h4>
+                        <p style="opacity: 0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">
+                            ${lastMsgText}
                         </p>
                     </div>
                 `;
@@ -1228,9 +1370,129 @@
             });
         }
 
+        // Поиск пользователей в глобальной базе (для фронтенд-демо)
+        function handleGlobalSearch(query) {
+            if (!query.trim()) {
+                searchResultsDropdown.style.display = 'none';
+                return;
+            }
+
+            const results = globalDirectory.filter(u =>
+                u.name.toLowerCase().includes(query.toLowerCase()) ||
+                u.username.toLowerCase().includes(query.toLowerCase())
+            );
+
+            if (results.length > 0) {
+                searchResultsDropdown.innerHTML = '';
+                results.forEach(user => {
+                    const div = document.createElement('div');
+                    div.className = 'search-result-item';
+                    div.onclick = () => showUserSearchProfile(user);
+                    div.innerHTML = `
+                        <div class="search-result-left">
+                            <div class="avatar" style="width: 36px; height: 36px; font-size: 13px; background: ${user.color}">${user.initial}</div>
+                            <div>
+                                <div class="search-result-name">${user.name}</div>
+                                <div class="search-result-sub">@${user.username}</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 11px; opacity: 0.6; font-weight: 700; color: var(--primary-h);">Профиль</div>
+                    `;
+                    searchResultsDropdown.appendChild(div);
+                });
+                searchResultsDropdown.style.display = 'flex';
+            } else {
+                searchResultsDropdown.innerHTML = `<div style="padding: 15px; text-align: center; opacity: 0.5; font-size: 13px;">Никого не найдено</div>`;
+                searchResultsDropdown.style.display = 'flex';
+            }
+        }
+
+        // Показывает модальное окно профиля найденного пользователя с возможностью начать чат
+        function showUserSearchProfile(user) {
+            lastSearchedUser = user;
+            searchResultsDropdown.style.display = 'none';
+            searchInput.value = '';
+
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            const modalElement = document.getElementById('modal');
+
+            modalTitle.innerText = 'Профиль пользователя';
+            modalBody.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 15px; text-align: center; padding: 10px 0;">
+                    <div class="avatar" style="width: 76px; height: 76px; font-size: 26px; background: ${user.color}; margin-bottom: 5px;">${user.initial}</div>
+                    <div>
+                        <h3 style="font-size: 18px; font-weight: 800; color: var(--text);">${user.name}</h3>
+                        <p style="font-size: 13px; opacity: 0.6; margin-top: 2px;">@${user.username}</p>
+                    </div>
+                    <div style="background: var(--input); padding: 12px 16px; border-radius: 14px; width: 100%; font-size: 13px;">
+                        <span style="display: block; font-weight: 700; opacity: 0.5; font-size: 11px; text-transform: uppercase; margin-bottom: 5px; text-align: left;">О себе</span>
+                        <p style="text-align: left; line-height: 1.4;">${user.bio || 'Пользователь мессенджера Keryx'}</p>
+                    </div>
+                    <button class="settings-btn" style="background: var(--grad); color: #000; border: none; font-weight: 700; width: 100%; margin-top: 10px; padding: 12px;" onclick="startDirectChat(lastSearchedUser)">
+                        Написать сообщение
+                    </button>
+                </div>
+            `;
+            modalElement.style.display = 'flex';
+        }
+
+        // Инициация или переключение на прямой диалог с пользователем
+        function startDirectChat(targetUser) {
+            hideModal();
+
+            // Проверяем, есть ли уже такой пользователь в списке наших чатов
+            let localUser = users.find(u => u.id === targetUser.id || u.username === targetUser.username);
+
+            if (!localUser) {
+                // Если чата нет, добавляем его в локальный массив чатов
+                localUser = {
+                    id: targetUser.id || (users.length + 1),
+                    name: targetUser.name,
+                    username: targetUser.username,
+                    initial: targetUser.initial || getInitials(targetUser.name),
+                    status: targetUser.status || 'Offline',
+                    bio: targetUser.bio || 'Пользователь мессенджера Keryx',
+                    color: targetUser.color || 'linear-gradient(135deg, #FF9900 0%, #FF5E00 100%)',
+                    messages: [] // пустой чат
+                };
+                users.push(localUser);
+            }
+
+            // Переключаем интерфейс на чаты, рендерим список слева и выбираем пользователя
+            toggleView('chat');
+            activeUserId = localUser.id;
+            renderChatList();
+            selectUser(localUser.id);
+            showToast(`Диалог с ${localUser.name} открыт!`);
+        }
+
+        // Скрыть выпадающий список при клике за его пределами
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.global-search')) {
+                searchResultsDropdown.style.display = 'none';
+            }
+        });
+
+        // Открытие полноэкранного просмотра изображения во всплывающем окне
+        function openImagePreview(url, fileName) {
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            const modalElement = document.getElementById('modal');
+
+            modalTitle.innerText = fileName;
+            modalBody.innerHTML = `
+                <div style="padding: 10px 0;">
+                    <img src="${url}" style="max-width: 100%; border-radius: 16px; box-shadow: var(--shadow);">
+                </div>
+            `;
+            modalElement.style.display = 'flex';
+        }
+
         function selectUser(id) {
             activeUserId = id;
             const user = users.find(u => u.id === id);
+            if (!user) return;
             currentChatInfo.innerHTML = `
                 <div class="avatar" style="width: 44px; height: 44px; background: ${user.color}">${user.initial}</div>
                 <div>
@@ -1244,11 +1506,37 @@
             user.messages.forEach(msg => {
                 const div = document.createElement('div');
                 div.className = `msg ${msg.type}`;
-                div.innerHTML = `${msg.t} <span class="time" style="margin-top: 8px; font-size: 10px; display: block; opacity: 0.5;">${msg.time}</span>`;
+
+                // Рендерим контент сообщения в зависимости от типа
+                if (msg.fileData) {
+                    if (msg.isImage) {
+                        div.innerHTML = `
+                            <div style="font-weight: 600;">${msg.t}</div>
+                            <img src="${msg.fileData}" class="msg-image" onclick="openImagePreview('${msg.fileData}', '${msg.t}')" alt="[Изображение]">
+                            <span class="time" style="margin-top: 8px; font-size: 10px; display: block; opacity: 0.5;">${msg.time} • ${msg.fileSize}</span>
+                        `;
+                    } else {
+                        div.innerHTML = `
+                            <a href="${msg.fileData}" download="${msg.t}" class="msg-file">
+                                <div class="msg-file-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                </div>
+                                <div class="msg-file-info">
+                                    <div style="font-weight: 700; overflow: hidden; text-overflow: ellipsis;">${msg.t}</div>
+                                    <div style="font-size: 11px; opacity: 0.6; margin-top: 2px;">Скачать • ${msg.fileSize}</div>
+                                </div>
+                            </a>
+                            <span class="time" style="margin-top: 8px; font-size: 10px; display: block; opacity: 0.5;">${msg.time}</span>
+                        `;
+                    }
+                } else {
+                    div.innerHTML = `${msg.t} <span class="time" style="margin-top: 8px; font-size: 10px; display: block; opacity: 0.5;">${msg.time}</span>`;
+                }
+
                 messageArea.appendChild(div);
             });
             messageArea.scrollTop = messageArea.scrollHeight;
-            renderChatList(searchInput.value);
+            renderChatList();
             if(isSettingsOpen) toggleSettings();
         }
 
@@ -1264,10 +1552,12 @@
             selectUser(activeUserId);
         };
 
-        searchInput.oninput = (e) => renderChatList(e.target.value);
+        // Живой поиск при вводе
+        searchInput.oninput = (e) => handleGlobalSearch(e.target.value);
 
         function showModal(title) {
             document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalBody').innerHTML = `Этот интерфейс находится в режиме демонстрации. Изменения временно не сохраняются.`;
             document.getElementById('modal').style.display = 'flex';
         }
         function hideModal() { document.getElementById('modal').style.display = 'none'; }
@@ -1294,7 +1584,23 @@
 
         window.onload = () => {
             renderChatList();
+
+            // Интеграция с Flask: Автоматически отображает найденного в БД пользователя во всплывающем окне
+            /*{% if user %}*/
+            const dbUser = {
+                id: parseInt('{{ user.id }}' || '999'),
+                name: '{{ user.username }}',
+                username: '{{ user.username }}',
+                initial: '{{ user.username[:2]|upper }}' || 'US',
+                status: 'Online',
+                bio: 'Пользователь Keryx',
+                color: 'linear-gradient(135deg, #7F00FF 0%, #E100FF 100%)'
+            };
+            showUserSearchProfile(dbUser);
+            /*{% else %}*/
             selectUser(1);
+            /*{% endif %}*/
+
             updateAvatarInitials(currentProfile.name);
         };
     </script>
